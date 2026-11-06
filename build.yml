@@ -1,21 +1,38 @@
 name: Build APK
+
 on:
   push:
-  workflow_dispatch:
+    branches: [ "main" ] # Сборка будет запускаться при пуше в ветку main
+  workflow_dispatch:      # Позволяет запускать сборку вручную из интерфейса GitHub
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle' # Ускоряет повторные сборки, кэшируя зависимости
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
-      - run: gradle assembleRelease
-      - uses: actions/upload-artifact@v4
+          gradle-version: '8.7'
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: OriginLauncher-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/**/*.apk # Безопасный путь, который найдет APK в любой подпапке
